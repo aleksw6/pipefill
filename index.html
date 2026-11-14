@@ -162,10 +162,9 @@ nav.tabs a[aria-current="page"] { color: var(--ink); border-top-color: var(--acc
 .status.idle { background: var(--line); color: var(--muted); }
 .read .fine { font: 500 12px/1.35 var(--mono); color: var(--muted); }
 .bar { position: relative; height: 10px; border-radius: 5px; background: var(--bg); border: 1px solid var(--line); overflow: visible; }
-.bar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 4px; background: var(--ok); transition: width .25s; max-width: 100%; }
+.bar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 4px; background: var(--ok); max-width: 100%; }
 .bar.over i { background: var(--over); }
 .bar b { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--ink); }
-@media (prefers-reduced-motion: reduce) { .bar i { transition: none; } }
 
 .note { display: flex; gap: 10px; padding: 10px 12px; border-radius: 8px; font-size: 13.5px; line-height: 1.35; border-left: 4px solid var(--warn); background: var(--warn-bg); }
 .note.bad { border-left-color: var(--over); background: var(--over-bg); }
@@ -177,6 +176,11 @@ nav.tabs a[aria-current="page"] { color: var(--ink); border-top-color: var(--acc
 .rows { display: flex; flex-direction: column; }
 .row { display: grid; grid-template-columns: 10px 1fr auto; gap: 10px; align-items: center; padding: 9px 12px; border-top: 1px solid var(--line); }
 .row:first-child { border-top: 0; }
+.card.rows { overflow: hidden; }
+.swipe { position: relative; overflow: hidden; border-top: 1px solid var(--line); }
+.swipe:first-child { border-top: 0; }
+.swipe .row { position: relative; border-top: 0; background: var(--surface); touch-action: pan-y; transition: transform .2s cubic-bezier(.2,.8,.2,1); }
+.swipe .del { position: absolute; top: 0; right: 0; bottom: 0; width: 100%; padding: 0 20px 0 0; text-align: right; background: var(--over); color: var(--surface); font-weight: 600; font-size: 15px; }
 .row .dot { width: 10px; height: 10px; border-radius: 50%; }
 .row .what { min-width: 0; text-align: left; display: flex; flex-direction: column; gap: 3px; }
 .row .name { font-weight: 600; font-size: 16px; overflow-wrap: anywhere; }
@@ -243,10 +247,14 @@ details.math code { font: 500 12px/1.4 var(--mono); color: var(--ink); }
 .famhead span { font: 500 12px/1.3 var(--mono); color: var(--muted); text-align: right; }
 
 /* sheet */
-.sheet { position: fixed; inset: 0; z-index: 10; display: flex; flex-direction: column; justify-content: flex-end; background: rgba(8, 12, 16, .5); }
+.sheet { position: fixed; inset: 0; z-index: 10; display: flex; flex-direction: column; justify-content: flex-end; background: rgba(8, 12, 16, 0); transition: background-color .24s ease-out; }
+.sheet.in { background: rgba(8, 12, 16, .5); }
 .sheet[hidden] { display: none; }
-.sheet .panel { background: var(--bg); border-radius: 14px 14px 0 0; max-height: 88%; display: flex; flex-direction: column; max-width: 520px; width: 100%; margin: 0 auto; }
-.sheet .bar2 { flex: none; display: flex; justify-content: space-between; align-items: center; padding: 12px 16px 8px; }
+.sheet .panel { background: var(--bg); border-radius: 14px 14px 0 0; max-height: 88%; display: flex; flex-direction: column; max-width: 520px; width: 100%; margin: 0 auto; transform: translateY(100%); transition: transform .24s cubic-bezier(.2,.8,.2,1); will-change: transform; }
+.sheet.in .panel { transform: none; }
+.sheet .grab { flex: none; height: 20px; display: grid; place-items: center; touch-action: none; cursor: grab; }
+.sheet .grab::before { content: ""; width: 36px; height: 4px; border-radius: 2px; background: var(--steel); opacity: .7; }
+.sheet .bar2 { flex: none; display: flex; justify-content: space-between; align-items: center; padding: 0 16px 8px; touch-action: none; }
 .sheet .bar2 h2 { margin: 0; font: 800 22px/1 var(--display); letter-spacing: .06em; text-transform: uppercase; }
 .sheet .body { overflow-y: auto; padding: 4px 16px 20px; display: flex; flex-direction: column; gap: 12px; }
 .toast { position: fixed; left: 50%; bottom: 70px; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 9px 14px; border-radius: 8px; font-size: 14px; font-weight: 500; z-index: 20; max-width: calc(100% - 32px); }
@@ -259,6 +267,22 @@ textarea.copy { width: 100%; min-height: 150px; font: 500 13px/1.4 var(--mono); 
 .field .step input[type="text"] { min-height: 0; border: 0; border-left: 1px solid var(--line); border-right: 1px solid var(--line); border-radius: 0; background: transparent; padding: 0; font: 600 22px/1 var(--num); }
 
 
+/* ---- Refinement pass: touch response and motion. Nothing here changes layout, math or content. ---- */
+* { -webkit-tap-highlight-color: transparent; }
+body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+input, textarea { -webkit-user-select: text; user-select: text; }
+button, a { touch-action: manipulation; }
+.chip, .btn, .seg button, .step button, nav.tabs a, .row .what, .v { transition: transform .12s ease-out, opacity .12s ease-out, background-color .12s ease-out; }
+.chip:active, .btn:active { transform: scale(.96); opacity: .82; }
+.seg button:not([aria-pressed="true"]):active { background: var(--bg); }
+.row .what:active { opacity: .5; }
+nav.tabs a:active { opacity: .55; }
+.hero svg circle[data-k] { transform-box: fill-box; transform-origin: center; }
+.toast:not([hidden]) { animation: toast-in .18s ease-out; }
+@keyframes toast-in { from { opacity: 0; transform: translate(-50%, 6px); } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
+
+
 /* Installed app: keep the header clear of the status bar / notch and the tabs clear of the home indicator. */
 .top { padding-top: calc(10px + env(safe-area-inset-top)); padding-left: calc(16px + env(safe-area-inset-left)); padding-right: calc(16px + env(safe-area-inset-right)); }
 nav.tabs { padding-bottom: env(safe-area-inset-bottom); }
@@ -268,7 +292,7 @@ nav.tabs { padding-bottom: env(safe-area-inset-bottom); }
 </style>
 </head>
 <body>
-<header class="top"><h1>Pipe Fill</h1><span class="sub">NEC Ch. 9 · v1.3</span></header>
+<header class="top"><h1>Pipe Fill</h1><span class="sub">NEC Ch. 9 · v1.4</span></header>
 <main>
   <section class="view" id="fill" aria-label="Fill"></section>
   <section class="view" id="pipe" aria-label="Pipe parts" hidden></section>
@@ -279,6 +303,7 @@ nav.tabs { padding-bottom: env(safe-area-inset-bottom); }
   <a href="#fill">Fill</a><a href="#pipe">Pipe</a><a href="#cables">Cables</a>
 </div></nav>
 <div class="sheet" id="sheet" hidden><div class="panel" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+  <div class="grab" aria-hidden="true"></div>
   <div class="bar2"><h2 id="sheet-title"></h2><button class="btn small" type="button" id="sheet-close">Close</button></div>
   <div class="body" id="sheet-body"></div>
 </div></div>
@@ -478,6 +503,14 @@ if (typeof module !== 'undefined') module.exports = Core;
     return e;
   };
   const $ = id => document.getElementById(id);
+
+  // ---------- motion: short eases only, and all of it off under Reduce Motion ----------
+  const RM = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const EASE = 'cubic-bezier(.2,.8,.2,1)';
+  const anim = (el, frames, ms) => (RM || !el || !el.animate ? null : el.animate(frames, { duration: ms || 220, easing: EASE }));
+  document.addEventListener('touchstart', () => {}, { passive: true }); // lets :active pressed states fire on iOS
+  // What the last draw showed, so the next draw can ease from it.
+  const M = { ready: false, pct: 0, bar: null, dots: {}, notes: new Set(), parts: null, raf: 0 };
   const chip = (label, pressed, onclick, extra) => h('button', Object.assign({ class: 'chip', type: 'button', 'aria-pressed': String(!!pressed), onclick }, extra || {}), label);
   const seg = (opts, cur, set) => h('div', { class: 'seg', role: 'group' }, opts.map(([v, l]) => h('button', { type: 'button', 'aria-pressed': String(v === cur), onclick: () => set(v) }, l)));
   // − [typable number] +. live(n) fires while typing (partial redraw, focus kept); set(n) commits and redraws everything.
@@ -509,9 +542,32 @@ if (typeof module !== 'undefined') module.exports = Core;
   function openSheet(title, build) {
     $('sheet-title').textContent = title;
     const body = $('sheet-body'); body.replaceChildren(); build(body);
-    $('sheet').hidden = false; body.scrollTop = 0;
+    const sh = $('sheet'), panel = sh.querySelector('.panel');
+    clearTimeout(sheetT); panel.style.transform = ''; panel.style.transition = '';
+    sh.hidden = false; body.scrollTop = 0;
+    sh.classList.remove('in'); void sh.offsetWidth; sh.classList.add('in');   // slide up from the bottom edge
   }
-  const closeSheet = () => { $('sheet').hidden = true; };
+  let sheetT;
+  const closeSheet = () => {
+    const sh = $('sheet'); if (sh.hidden) return;
+    sh.classList.remove('in'); clearTimeout(sheetT);
+    sheetT = setTimeout(() => { sh.hidden = true; const p = sh.querySelector('.panel'); p.style.transform = ''; p.style.transition = ''; }, RM ? 0 : 240);
+  };
+  // Drag the sheet down by its handle or title bar to dismiss it.
+  (() => {
+    const sh = $('sheet'), panel = sh.querySelector('.panel');
+    let y0 = null, dy = 0, t0 = 0;
+    const end = () => {
+      if (y0 == null) return;
+      const v = dy / Math.max(1, performance.now() - t0); y0 = null; panel.style.transition = '';
+      if (dy > 110 || (dy > 30 && v > 0.5)) { panel.style.transform = 'translateY(100%)'; closeSheet(); } else panel.style.transform = '';
+    };
+    for (const z of sh.querySelectorAll('.grab, .bar2')) {
+      z.addEventListener('pointerdown', e => { if (e.target.closest('button')) return; y0 = e.clientY; dy = 0; t0 = performance.now(); panel.style.transition = 'none'; try { z.setPointerCapture(e.pointerId); } catch (x) { /* ignore */ } });
+      z.addEventListener('pointermove', e => { if (y0 == null) return; dy = Math.max(0, e.clientY - y0); panel.style.transform = 'translateY(' + dy + 'px)'; });
+      z.addEventListener('pointerup', end); z.addEventListener('pointercancel', end);
+    }
+  })();
   $('sheet-close').addEventListener('click', closeSheet);
   $('sheet').addEventListener('click', e => { if (e.target === $('sheet')) closeSheet(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
@@ -624,7 +680,7 @@ if (typeof module !== 'undefined') module.exports = Core;
     svg.append(s('circle', { cx, cy, r: ri + 3.5, fill: 'var(--surface)', stroke: 'var(--steel)', 'stroke-width': 7 }));
     svg.append(s('circle', { cx, cy, r: ri, fill: 'var(--surface)', stroke: 'var(--ink)', 'stroke-width': 1 }));
     if (placedInfo) {
-      for (const p of placedInfo.placed) svg.append(s('circle', { cx: cx + p.x * k, cy: cy + p.y * k, r: Math.max(0.5, p.r * k - 0.4), fill: 'var(--c' + (p.color % 6 + 1) + ')', stroke: 'var(--surface)', 'stroke-width': 0.8 }));
+      for (const p of placedInfo.placed) svg.append(s('circle', { cx: cx + p.x * k, cy: cy + p.y * k, r: Math.max(0.5, p.r * k - 0.4), fill: 'var(--c' + (p.color % 6 + 1) + ')', stroke: 'var(--surface)', 'stroke-width': 0.8, 'data-k': p.key }));
       if (placedInfo.failed) { const t = s('text', { x: cx, y: cy - ri + 16, 'text-anchor': 'middle', fill: 'var(--over)', 'font-family': 'var(--mono)', 'font-size': 10, 'font-weight': 600 }); t.textContent = '+' + placedInfo.failed + ' won’t fit'; svg.append(t); }
     } else if (total) {
       svg.append(s('circle', { cx, cy, r: ri * Math.sqrt(Math.min(1, f.fillPct / 100)), fill: 'var(--steel)' }));
@@ -653,10 +709,10 @@ if (typeof module !== 'undefined') module.exports = Core;
     // hero
     let packed = null;
     if (total && total <= 80) {
-      const radii = [], colors = [];
-      S.rows.forEach((r, i) => { for (let q = 0; q < r.qty; q++) { radii.push(Math.sqrt(r.area / Math.PI)); colors.push(i); } });
+      const radii = [], colors = [], keys = [];
+      S.rows.forEach((r, i) => { for (let q = 0; q < r.qty; q++) { radii.push(Math.sqrt(r.area / Math.PI)); colors.push(i); keys.push(r.k + '#' + q); } });
       packed = Core.pack(R.id / 2, radii);
-      packed.placed.forEach(p => { p.color = colors[p.i]; });
+      packed.placed.forEach(p => { p.color = colors[p.i]; p.key = keys[p.i]; });
     }
     const state = !total ? 'idle' : f.pass ? 'ok' : 'over';
     const lastRow = S.rows.find(r => r.k === S.last) || S.rows[S.rows.length - 1];
@@ -688,25 +744,108 @@ if (typeof module !== 'undefined') module.exports = Core;
 
     // rows
     const top = kids.splice(0);
-    const rows = S.rows.map((r, i) => h('div', { class: 'row' },
+    const rows = S.rows.map((r, i) => { let wrap; const row = h('div', { class: 'row' },
       h('span', { class: 'dot', style: 'background:var(--c' + (i % 6 + 1) + ')' }),
       h('button', { class: 'what', type: 'button', 'aria-label': 'Change ' + r.name, onclick: () => changeRow(i) },
         h('span', { class: 'name' }, r.name),
         h('span', { class: 'meta' }, r.meta, h('span', { class: 'badge ' + r.badge }, r.badge[0] + r.badge.slice(1).toLowerCase()))),
       stepper('qty' + i, r.qty, 0, 1, r.name + ' quantity',
         n => { r.qty = Math.min(999, n); S.last = r.k; save(); renderFill(true); },
-        q => { if (q === 0) S.rows.splice(i, 1); else { r.qty = q; S.last = r.k; } save(); renderAll(); })));
-    kids.push(h('div', { class: 'group' },
+        q => { if (q === 0) return removeRow(r.k, wrap); r.qty = q; S.last = r.k; save(); renderAll(); }));
+      wrap = h('div', { class: 'swipe' }, h('button', { class: 'del', type: 'button', tabindex: '-1', 'aria-label': 'Remove ' + r.name, onclick: () => removeRow(r.k, wrap) }, 'Remove'), row);
+      swipeable(wrap, row, () => removeRow(r.k, wrap));
+      return wrap; });
+    kids.push(h('div', { class: 'group', id: 'fill-rows' },
       h('span', { class: 'label' }, 'In the pipe'),
       h('div', { class: 'card rows' }, rows.length ? rows : h('div', { class: 'empty' }, 'No cables yet. Add one to size the pipe.')),
       h('div', { class: 'rowacts' },
         h('button', { class: 'btn primary', type: 'button', id: 'add', onclick: () => openAdd() }, 'Add cable'),
         rows.length ? h('button', { class: 'btn', type: 'button', onclick: () => { S.rows = []; S.last = null; save(); renderAll(); } }, 'Clear') : null)));
     const keep = v.querySelector('#sizes') ? v.querySelector('#sizes').scrollLeft : 0;
+    const oldRows = $('fill-rows'), oldTop = oldRows ? oldRows.getBoundingClientRect().top : null;
+    if (!topOnly) openSwipe = null;
     if (topOnly && $('fill-top')) $('fill-top').replaceChildren(...top);
     else v.replaceChildren(h('div', { class: 'part', id: 'fill-top' }, top), ...kids);
     const strip = v.querySelector('#sizes');
     if (keep) strip.scrollLeft = keep; else { const on = strip.querySelector('[aria-pressed="true"]'); if (on && on.offsetLeft > strip.clientWidth - 60) strip.scrollLeft = on.offsetLeft - 80; }
+    fillMotion(v, f, total, oldTop);
+  }
+  // Ease the hero from what it showed last: the number counts, the bar slides, cables glide to their new spots,
+  // new notes fade in and the cable list slides (not jumps) when a note above it comes or goes.
+  function fillMotion(v, f, total, oldTop) {
+    const fmt = x => (!total ? '0' : x >= 99.95 ? '99+' : x.toFixed(x < 10 ? 1 : 0));
+    const pctNode = v.querySelector('.pct').firstChild, to = total ? f.fillPct : 0, from = M.pct;
+    cancelAnimationFrame(M.raf);
+    if (M.ready && !RM && Math.abs(to - from) >= 0.5) {
+      const t0 = performance.now(), step = now => {
+        const p = Math.min(1, (now - t0) / 220), e = 1 - Math.pow(1 - p, 3);
+        pctNode.nodeValue = p < 1 ? fmt(from + (to - from) * e) : fmt(to);
+        if (p < 1) M.raf = requestAnimationFrame(step);
+      };
+      pctNode.nodeValue = fmt(from); M.raf = requestAnimationFrame(step);
+    }
+    M.pct = to;
+    const bar = v.querySelector('.bar i'), w = bar.style.width;
+    if (M.ready && M.bar && M.bar !== w) anim(bar, [{ width: M.bar }, { width: w }], 240);
+    M.bar = w;
+    const dots = {}, cs = v.querySelectorAll('.hero svg circle[data-k]');
+    cs.forEach(c => {
+      const k = c.getAttribute('data-k'), cur = { x: +c.getAttribute('cx'), y: +c.getAttribute('cy'), r: +c.getAttribute('r') }, was = M.dots[k];
+      dots[k] = cur;
+      if (!M.ready || cs.length > 60) return;
+      if (!was) anim(c, [{ transform: 'scale(.2)', opacity: 0 }, { transform: 'none', opacity: 1 }], 240);
+      else if (Math.abs(was.x - cur.x) + Math.abs(was.y - cur.y) + Math.abs(was.r - cur.r) > 0.3)
+        anim(c, [{ transform: 'translate(' + (was.x - cur.x) + 'px,' + (was.y - cur.y) + 'px) scale(' + (was.r / cur.r) + ')' }, { transform: 'none' }], 260);
+    });
+    M.dots = dots;
+    const notes = new Set();
+    v.querySelectorAll('#fill-top .note').forEach(n => { const k = n.textContent.slice(0, 40); notes.add(k); if (M.ready && !M.notes.has(k)) anim(n, [{ opacity: 0, transform: 'translateY(-6px)' }, { opacity: 1, transform: 'none' }], 220); });
+    M.notes = notes;
+    const g = $('fill-rows');
+    if (M.ready && g && oldTop != null) { const d = oldTop - g.getBoundingClientRect().top; if (Math.abs(d) > 1 && Math.abs(d) < 400) anim(g, [{ transform: 'translateY(' + d + 'px)' }, { transform: 'none' }], 220); }
+    M.ready = true;
+  }
+  // Swipe a cable row left to uncover Remove; a long swipe removes it outright. Vertical drags still scroll.
+  let openSwipe = null;
+  const closeSwipe = () => { if (openSwipe) { openSwipe.style.transform = ''; openSwipe = null; } };
+  function swipeable(wrap, row, del) {
+    const W = 88; let x0 = null, y0 = 0, raw = 0, lock = null, base = 0, swiped = false;
+    row.addEventListener('pointerdown', e => {
+      if ((e.pointerType === 'mouse' && e.button) || e.target.closest('.step')) return;
+      if (openSwipe && openSwipe !== row) closeSwipe();
+      x0 = e.clientX; y0 = e.clientY; lock = null; raw = base = openSwipe === row ? -W : 0; swiped = false;
+    });
+    row.addEventListener('pointermove', e => {
+      if (x0 == null) return;
+      const mx = e.clientX - x0, my = e.clientY - y0;
+      if (!lock) {
+        if (Math.abs(mx) < 8 && Math.abs(my) < 8) return;
+        lock = Math.abs(mx) > Math.abs(my) ? 'x' : 'y';
+        if (lock === 'x') { swiped = true; row.style.transition = 'none'; try { row.setPointerCapture(e.pointerId); } catch (x) { /* ignore */ } }
+      }
+      if (lock !== 'x') return;
+      raw = Math.min(0, base + mx);
+      row.style.transform = 'translateX(' + (raw < -W ? -W + (raw + W) * 0.55 : raw) + 'px)';
+    });
+    const end = e => {
+      if (x0 == null) return; x0 = null; row.style.transition = '';
+      if (lock !== 'x') return;
+      if (e.type === 'pointerup' && raw < -wrap.offsetWidth * 0.6) { row.style.transform = 'translateX(-100%)'; del(); }
+      else if (raw < -W / 2) { row.style.transform = 'translateX(' + -W + 'px)'; openSwipe = row; }
+      else { row.style.transform = ''; if (openSwipe === row) openSwipe = null; }
+    };
+    row.addEventListener('pointerup', end); row.addEventListener('pointercancel', end);
+    // A swipe must not also count as a tap on the row; a tap on an open row just closes it.
+    row.addEventListener('click', e => {
+      if (swiped) { swiped = false; e.stopPropagation(); e.preventDefault(); }
+      else if (openSwipe === row && !e.target.closest('.step')) { closeSwipe(); e.stopPropagation(); e.preventDefault(); }
+    }, true);
+  }
+  function removeRow(k, wrap) {
+    const done = () => { const j = S.rows.findIndex(r => r.k === k); if (j >= 0) S.rows.splice(j, 1); openSwipe = null; save(); renderAll(); };
+    if (RM || !wrap || !wrap.animate) return done();
+    const a = wrap.animate([{ height: wrap.offsetHeight + 'px', opacity: 1 }, { height: '0px', opacity: 0 }], { duration: 200, easing: EASE, fill: 'forwards' });
+    a.onfinish = done; a.oncancel = done;
   }
   function openAdd() {
     openSheet('Add cable', body => makeBrowser(body, { id: 'add', onPick: e => { addRow(e); closeSheet(); renderAll(); toast('Added ' + e.name); } }));
@@ -815,6 +954,12 @@ if (typeof module !== 'undefined') module.exports = Core;
         h('p', {}, h('code', {}, 'Terminations = 2 × ' + c.S + ' = ' + c.terms)),
         h('p', {}, h('code', {}, 'Supports = ' + c.supports), '. One within 3 ft of each box or LB, then every ' + span + ' ft (NEC ' + SUPPORT_CODE[S.type] + '). A section of 6 ft or less needs one.'),
         h('p', {}, 'Fasteners and hanger hardware are typical. Adjust for the structure you are hanging from.')));
+    const seen = {};
+    box.querySelectorAll('.parts tr').forEach((tr, i) => {
+      const k = out[i][1], q = String(out[i][0]); seen[k] = q;
+      if (M.parts && M.parts[k] !== q) anim(tr.firstChild, [{ opacity: 0.25, transform: 'translateY(-5px)' }, { opacity: 1, transform: 'none' }], 220);
+    });
+    M.parts = seen;
   }
   function renderPipe() {
     const v = $('pipe'), P = S.pipe, R = resolved(), t = S.type;
@@ -868,11 +1013,16 @@ if (typeof module !== 'undefined') module.exports = Core;
 
   // ---------- shell ----------
   const TABS = ['fill', 'pipe', 'cables'];
+  const scrollAt = {}; let curTab = null;
   function showTab() {
     const t = TABS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'fill';
+    const main = document.querySelector('main');
+    if (curTab) scrollAt[curTab] = main.scrollTop;   // each tab keeps its own place
     for (const id of TABS) { $(id).hidden = id !== t; document.querySelector('nav.tabs a[href="#' + id + '"]').setAttribute('aria-current', id === t ? 'page' : 'false'); }
     if (t === 'cables') renderCables();
-    document.querySelector('main').scrollTop = 0;
+    main.scrollTop = scrollAt[t] || 0;
+    if (curTab && curTab !== t) anim($(t), [{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], 180);
+    curTab = t;
   }
   function renderAll() { renderFill(); renderPipe(); }
   window.addEventListener('hashchange', showTab);
