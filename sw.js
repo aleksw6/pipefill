@@ -1,5 +1,5 @@
 // Pipe Fill offline cache. The cache name changes whenever any app file changes, which is how phones pick up updates.
-const CACHE = 'pipefill-2.0-0ba92805';
+const CACHE = 'pipefill-2.1-4cf2b906';
 const FILES = ["./", "index.html", "manifest.webmanifest", "apple-touch-icon.png", "icon-192.png", "icon-512.png"];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES.map(f => new Request(f, { cache: 'reload' })))).then(() => self.skipWaiting()));
